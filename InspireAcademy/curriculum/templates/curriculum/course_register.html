@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h3>Are you sure you want to register for this course?</h3>
+<form method="post">
+    {% csrf_token %}
+    <input type="submit" name="" value="Register">
+    <a href="{% url 'admin:index' %}">Cancel</a> 
+</form>
+
+{% endblock %}

@@ -1,15 +1,15 @@
+from django import forms
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
-
 from app_users.forms import UserForm, UserProfileInfoForm
 
 # Create your views here.
 def index(request):
-    return render(request, 'home.html')
+    return render(request, 'base.html')
 
 def register(request):
 
@@ -18,6 +18,7 @@ def register(request):
     if request.method == "POST":
         user_form = UserForm(data=request.POST)
         profile_form = UserProfileInfoForm(data=request.POST)
+
 
         if user_form.is_valid() and profile_form.is_valid():
             user = user_form.save()

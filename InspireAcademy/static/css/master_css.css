@@ -1,0 +1,17 @@
+html,
+body,
+header, 
+#intro {
+    height: 100%;
+}
+
+#intro {
+    background: linear-gradient(rgba(0, 0, 0, 0.7),rgba(0,0,0,0.7)), url("https://besthqwallpapers.com/Uploads/11-12-2021/187381/3d-planet-4k-minimal-earth-abstract-planet.jpg");
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    
+    
+
+}

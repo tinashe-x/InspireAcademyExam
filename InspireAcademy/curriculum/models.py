@@ -4,8 +4,9 @@ from django.db.models.query_utils import subclasses
 from django.template.defaultfilters import slugify
 import os
 from django.contrib.auth.models import User
-# Create your models here.
+from django.urls import reverse
 
+# Create your models here.
 
 class Standard(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -62,9 +63,9 @@ class Lesson(models.Model):
     name = models.CharField(max_length=250)
     position = models.PositiveSmallIntegerField(verbose_name="Chapter no.")
     slug = models.SlugField(null=True, blank=True)
-    video = models.FileField(upload_to=save_lesson_files, verbose_name="video", blank=True, null=True)
-    ppt = models.FileField(upload_to=save_lesson_files, verbose_name="Presentation", blank=True)
-    Notes = models.FileField(upload_to=save_lesson_files, verbose_name="Notes", blank=True)
+    video = models.FileField(upload_to=save_lesson_files, verbose_name="video", blank=False, null=True)
+    ppt = models.FileField(upload_to=save_lesson_files, verbose_name="Presentation", blank=False)
+    Notes = models.FileField(upload_to=save_lesson_files, verbose_name="Notes", blank=False)
 
     class Meta:
         ordering = ['position']
@@ -75,3 +76,55 @@ class Lesson(models.Model):
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
         super().save (*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse('curriculum:lesson_list', kwargs={'slug':self.subject.slug, 'standard':self.Standard.slug})
+
+class WorkingDays(models.Model):
+    standard = models.ForeignKey(Standard, on_delete=models.CASCADE,related_name='standard_days')
+    day = models.CharField(max_length=100)
+    def __str__(self):
+        return self.day
+
+class TimeSlots(models.Model):
+    standard = models.ForeignKey(Standard, on_delete=models.CASCADE,related_name='standard_time_slots')
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    def __str__(self):
+        return str(self.start_time) + ' - ' + str(self.end_time) 
+
+class SlotSubject(models.Model):
+    standard = models.ForeignKey(Standard, on_delete=models.CASCADE,related_name='standard_slots')
+    day = models.ForeignKey(WorkingDays, on_delete=models.CASCADE,related_name='standard_slots_days')
+    slot = models.ForeignKey(TimeSlots, on_delete=models.CASCADE,related_name='standard_slots_time')
+    slot_subject = models.ForeignKey(Subject, on_delete=models.CASCADE,related_name='standard_slots_subject')
+
+    def __str__(self):
+        return str(self.standard)+ ' - ' + str(self.day) + ' - ' + str(self.slot) + ' - ' + str(self.slot_subject)
+
+class Comment(models.Model):
+    lesson_name = models.ForeignKey(Lesson,null=True, on_delete=models.CASCADE,related_name='comments')
+    comm_name = models.CharField(max_length=100, blank=True)
+    # reply = models.ForeignKey("Comment", null=True, blank=True, on_delete=models.CASCADE,related_name='replies')
+    author = models.ForeignKey(User,on_delete=models.CASCADE)
+    body = models.TextField(max_length=500)
+    date_added = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        self.comm_name = slugify("comment by" + "-" + str(self.author) + str(self.date_added))
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.comm_name
+
+    class Meta:
+        ordering = ['-date_added']
+
+class Reply(models.Model):
+    comment_name = models.ForeignKey(Comment, on_delete=models.CASCADE,related_name='replies')
+    reply_body = models.TextField(max_length=500)
+    author = models.ForeignKey(User,on_delete=models.CASCADE)
+    date_added = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return "reply to " + str(self.comment_name.comm_name)
